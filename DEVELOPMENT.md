@@ -264,6 +264,48 @@ stmt = stmt.limit(intent.limit)
 results = session.execute(stmt).fetchall()
 ```
 
+## Recommended Build Order
+
+### Phase 1: Project Setup (15 min)
+- [x] Create directory structure (`frontend/`, `backend/`)
+- [x] Initialize React + Vite frontend
+- [x] Initialize Python backend (Flask) with `uv`
+- [x] Create `.env.example` file
+- [x] Set up `.gitignore` (already exists)
+
+### Phase 2: Backend API First (30-45 min)
+**Start with backend because:**
+- Simpler (one endpoint)
+- No frontend dependencies
+- Can test with curl/Postman
+- Frontend depends on it
+
+**Tasks:**
+- [x] Create Flask app with `/api/generate` endpoint
+- [x] Add LLM integration (Langchain + OpenAI)
+- [x] Set up environment variables
+- [x] Test endpoint returns LLM output
+- [x] Add CORS for frontend
+
+### Phase 3: Basic Frontend (30-45 min)
+- [ ] Create simple form to submit prompts
+- [ ] Connect to backend API
+- [ ] Display raw LLM output (unsafe mode first)
+- [ ] Verify end-to-end flow works
+
+### Phase 4: Security Features (30-45 min)
+- [ ] Add DOMPurify sanitization
+- [ ] Create SafeRenderer component
+- [ ] Add CSP headers in backend
+- [ ] Add mode toggle UI
+- [ ] Test XSS payload in both modes
+
+### Phase 5: Polish & Testing (30-60 min)
+- [ ] Add "Inject XSS" button with preloaded prompts
+- [ ] Add "Direct Injection" button
+- [ ] Write basic unit tests
+- [ ] Add visual indicators
+
 ## Future Enhancements
 
 - [ ] Add more XSS payload examples (CSRF, path traversal)

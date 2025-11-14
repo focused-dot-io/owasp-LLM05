@@ -88,6 +88,7 @@ Include these references in the blog post:
 - [ ] [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 - [ ] [Content Security Policy (CSP) Guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
 - [ ] [OWASP XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
+- [ ] [xkcd: Exploits of a Mom (Little Bobby Tables)](https://xkcd.com/327/) - Classic injection comic
 - [ ] Link to this GitHub repo (when published)
 
 ## Blog Post Structure (Suggested)
