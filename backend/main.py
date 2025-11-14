@@ -49,6 +49,7 @@ def health():
     """Health check endpoint"""
     return jsonify({"status": "ok"})
 
+
 if __name__ == "__main__":
     port = int(os.getenv("BACKEND_PORT", 5000))
     app.run(debug=True, port=port)

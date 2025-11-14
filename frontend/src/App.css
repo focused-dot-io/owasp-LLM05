@@ -19,11 +19,11 @@ header p {
   margin: 0;
 }
 
-.prompt-form {
+.renderer-form {
   background: #f5f5f5;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .form-group {
@@ -92,18 +92,65 @@ button:disabled {
   color: #333;
 }
 
+.renderers-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.renderer-container {
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+}
+
+.renderer-container.unsafe {
+  border-color: #f66;
+}
+
+.renderer-container.safe {
+  border-color: #6f6;
+}
+
+.renderer-container h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.renderer-container.unsafe h3 {
+  color: #c33;
+}
+
+.renderer-container.safe h3 {
+  color: #3c3;
+}
+
 .response-content {
   background: white;
   border: 2px solid #ddd;
   border-radius: 4px;
   padding: 1.5rem;
   min-height: 100px;
+  flex: 1;
 }
 
 .response-content.unsafe {
   border-color: #f66;
+  background: #fff5f5;
 }
 
 .response-content.safe {
   border-color: #6f6;
+  background: #f5fff5;
+}
+
+@media (max-width: 768px) {
+  .renderers-comparison {
+    grid-template-columns: 1fr;
+  }
 }

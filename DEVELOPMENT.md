@@ -288,17 +288,19 @@ results = session.execute(stmt).fetchall()
 - [x] Add CORS for frontend
 
 ### Phase 3: Basic Frontend (30-45 min)
-- [ ] Create simple form to submit prompts
-- [ ] Connect to backend API
-- [ ] Display raw LLM output (unsafe mode first)
-- [ ] Verify end-to-end flow works
+- [x] Create simple form to submit prompts
+- [x] Connect to backend API
+- [x] Display raw LLM output (unsafe mode first)
+- [x] Verify end-to-end flow works
+- [x] Test XSS vulnerability demonstration (working prompts documented in DEMO_PROMPTS.md)
 
 ### Phase 4: Security Features (30-45 min)
-- [ ] Add DOMPurify sanitization
-- [ ] Create SafeRenderer component
+- [x] Add DOMPurify sanitization
+- [x] Create SafeRenderer component
+- [x] Create UnsafeRenderer component
+- [x] Add side-by-side comparison UI
 - [ ] Add CSP headers in backend
-- [ ] Add mode toggle UI
-- [ ] Test XSS payload in both modes
+- [ ] Test XSS payload in both modes (should execute in unsafe, be blocked in safe)
 
 ### Phase 5: Polish & Testing (30-60 min)
 - [ ] Add "Inject XSS" button with preloaded prompts
