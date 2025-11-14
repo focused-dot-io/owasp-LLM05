@@ -4,114 +4,13 @@
 
 This document contains technical specifications for implementing and testing the LLM05 Improper Output Handling PoC.
 
-## How to Reproduce the Issue (Web Dashboard)
-
-### XSS Vulnerability Demo
-
-1. **Open the app** and navigate to the dashboard
-2. **Select "Unsafe render"** mode
-3. **Enter a benign prompt** to see normal LLM output behavior
-4. **Click "Inject XSS"** button (uses preloaded malicious prompt)
-
-### XSS Payloads to Test
-
-The primary payload to test:
-
-```html
-<script>alert('pwned')</script>
-```
-
-<!-- Optional additional payloads if time permits:
-```html
-<img src=x onerror=alert(1)>
-```
-
-```markdown
-[click me](/javascript:alert(1))
-```
--->
-
-### Expected Behavior
-
-- **Unsafe renderer**: Alert/dialog should execute, demonstrating XSS vulnerability
-- **Safe renderer**: Payload should be neutralized (no alert execution)
-
-### Direct Injection Test
-
-> **Note**: The app includes a button that bypasses the LLM and injects the raw payload directly. This proves the renderer is the issue, not model behavior.
-
-## Implementation TODOs
-
-### Frontend (React + Vite)
-
-- [ ] Create two rendering modes:
-  - [ ] Unsafe mode: `dangerouslySetInnerHTML` or similar
-  - [ ] Safe mode: DOMPurify + CSP
-- [ ] Add mode toggle/selector UI
-- [ ] Implement "Inject XSS" button with preloaded malicious prompts
-- [ ] Implement "Direct Injection" button (bypasses LLM)
-- [ ] Add visual indicators for safe/unsafe modes
-- [ ] Display rendered LLM output side-by-side or toggled
-
-### Backend (Python - Flask/FastAPI)
-
-- [ ] Create `/api/generate` endpoint
-- [ ] Integrate LLM API (OpenAI/Anthropic/etc.)
-- [ ] Accept prompt from frontend
-- [ ] Return raw LLM response (no server-side sanitization for demo purposes)
-- [ ] Add logging for prompt injection attempts
-- [ ] (Optional) Create `/api/execute-sql` endpoint for SQL injection demo
-
 ### Attack Scenarios
 
-#### Scenario 1: XSS via Script Tag Injection
-**User Action**: Submit prompt that coerces LLM to return `<script>alert('pwned')</script>`  
-**Expected Result (Unsafe)**: JavaScript alert executes in browser  
-**Expected Result (Safe)**: Script tags are sanitized/escaped
-
-#### Scenario 2 (Optional): SQL Injection
+#### SQL Injection
 **User Action**: Coerce LLM to generate malicious SQL query  
 **Expected Result (Unsafe)**: Database operation executes (data loss/exfiltration)  
 **Expected Result (Safe)**: Query is parameterized or validated
 
-### Testing Requirements
-
-**Unit Tests:**
-- [ ] Assert XSS payloads are removed/escaped by `SanitizedRenderer`
-  - Test `<script>alert('pwned')</script>` is stripped
-  - Test event handlers like `onerror=` are removed
-  - Test `javascript:` URLs are neutralized
-- [ ] Unit tests for CSP header configuration
-- [ ] Snapshot tests: verify known safe Markdown stays readable after sanitization
-
-**E2E Tests:**
-- [ ] E2E test: XSS payload in unsafe mode triggers alert
-- [ ] E2E test: XSS payload in safe mode is neutralized
-- [ ] E2E test: Direct injection proves renderer vulnerability
-
-**Runtime Monitoring:**
-- [ ] Capture raw LLM output (with redactions for sensitive data)
-- [ ] Flag suspicious patterns in logs: `<script>`, `onerror=`, `javascript:`
-- [ ] CSP violation reports: enable `report-uri`/`report-to` and show blocked events in console/logs
-
-**Test Commands:**
-```bash
-npm test              # Run all unit tests (sanitization/validation specs)
-npm run test:watch    # Watch mode for development
-npm run attack:xss    # (Optional) Opens app and triggers payload sequence automatically
-pytest                # Run backend tests
-pytest -v test_attacks.py  # Run attack scenario tests with verbose output
-```
-
-### Security Controls to Implement (Safe Mode)
-
-1. **DOMPurify**: Sanitize all HTML/Markdown before rendering
-2. **Content Security Policy (CSP)**: 
-   - Disable inline scripts (`script-src 'self'`)
-   - Disable `javascript:` URLs
-   - Restrict unsafe-eval
-3. **Output Validation**: Check LLM output against schema/expected format
-4. **Human-in-the-loop**: Optional confirmation for risky actions
 
 ## Frameworks & Libraries
 
@@ -167,8 +66,6 @@ FLASK_DEBUG=1
 4. Backend returns raw LLM response (JSON)
 5. Frontend renders response in selected mode (safe/unsafe)
 
-### Why No Server-Side Sanitization?
-For demo purposes, the backend intentionally returns raw LLM output to prove that **client-side rendering** is where the vulnerability exists. In production, defense-in-depth would include server-side validation too.
 
 ## Optional Add-On: Natural Language → SQL Demo
 
@@ -264,55 +161,9 @@ stmt = stmt.limit(intent.limit)
 results = session.execute(stmt).fetchall()
 ```
 
-## Recommended Build Order
-
-### Phase 1: Project Setup (15 min)
-- [x] Create directory structure (`frontend/`, `backend/`)
-- [x] Initialize React + Vite frontend
-- [x] Initialize Python backend (Flask) with `uv`
-- [x] Create `.env.example` file
-- [x] Set up `.gitignore` (already exists)
-
-### Phase 2: Backend API First (30-45 min)
-**Start with backend because:**
-- Simpler (one endpoint)
-- No frontend dependencies
-- Can test with curl/Postman
-- Frontend depends on it
-
-**Tasks:**
-- [x] Create Flask app with `/api/generate` endpoint
-- [x] Add LLM integration (Langchain + OpenAI)
-- [x] Set up environment variables
-- [x] Test endpoint returns LLM output
-- [x] Add CORS for frontend
-
-### Phase 3: Basic Frontend (30-45 min)
-- [x] Create simple form to submit prompts
-- [x] Connect to backend API
-- [x] Display raw LLM output (unsafe mode first)
-- [x] Verify end-to-end flow works
-- [x] Test XSS vulnerability demonstration (working prompts documented in DEMO_PROMPTS.md)
-
-### Phase 4: Security Features (30-45 min)
-- [x] Add DOMPurify sanitization
-- [x] Create SafeRenderer component
-- [x] Create UnsafeRenderer component
-- [x] Add side-by-side comparison UI
-- [ ] Add CSP headers in backend
-- [ ] Test XSS payload in both modes (should execute in unsafe, be blocked in safe)
-
-### Phase 5: Polish & Testing (30-60 min)
-- [ ] Add "Inject XSS" button with preloaded prompts
-- [ ] Add "Direct Injection" button
-- [ ] Write basic unit tests
-- [ ] Add visual indicators
-
 ## Future Enhancements
 
-- [ ] Add more XSS payload examples (CSRF, path traversal)
-- [ ] Add metrics/logging dashboard
 - [ ] Create automated test suite that runs all attack scenarios
-- [ ] Add "Behind the Scenes" view showing raw LLM output vs sanitized output
 - [ ] Add video walkthrough of attack scenarios
+- [ ] Add more XSS payload examples (CSRF, path traversal)
 

@@ -82,16 +82,84 @@ npm test             # Run unit tests
 # Backend
 cd backend
 uv run python main.py        # Start API server
-uv run pytest                # Run backend tests
 ```
 
-## Demonstrating the Vulnerability
+### Running Tests
 
-### XSS Attack Demo
+The frontend includes user interaction tests that verify the components work correctly:
+
+```bash
+cd frontend
+npm test             # Run tests in watch mode
+npm test -- --run    # Run tests once and exit
+```
+
+**Test Coverage:**
+- User typing prompts into forms
+- Form submission and API calls
+- Loading states
+- Error handling
+- Button enable/disable states
+
+These tests simulate real user behavior to ensure the renderers function correctly.
+
+## What's the Vulnerability?
+
+Treating LLM output as trusted and directly rendering or executing it creates serious security risks. This PoC demonstrates XSS vulnerabilities, but these represent just a sample of the many issues that can arise from improper output handling.
+
+**Core principle:** LLM output must be validated and sanitized like any other untrusted user input. Just because it comes from an AI model doesn't make it safe.
+
+### The Problem: Rendering HTML/Markdown Without Sanitization → XSS Attacks
+
+When LLM-generated content containing malicious scripts is rendered directly in the browser, attackers can:
+- Execute arbitrary JavaScript in users' browsers
+- Steal sessions and cookies
+- Manipulate the DOM
+- Redirect users to malicious sites
+- Perform actions on behalf of the user
+
+**Why this happens:** LLMs are designed to generate helpful content, including HTML. Attackers can use prompt injection techniques to coerce the model into generating malicious code, which then executes when rendered unsafely.
+
+### Other Potential Risks (Not Demonstrated in This PoC)
+
+While this PoC focuses on XSS, improper output handling can lead to other vulnerabilities:
+
+- **SQL Injection**: If an application runs LLM-generated database queries without validation or parameterization, attackers can manipulate the LLM to produce malicious SQL that deletes data, exfiltrates sensitive information, or compromises the database.
+- **Remote Code Execution**: When LLM output is passed to `eval()` or system shells
+- **CSRF Attacks**: Malicious links or forms in generated content
+- **Path Traversal**: File system access through generated file paths
+
+See the [OWASP reference](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/) for additional attack scenarios.
+
+## How It Works
+
+```
+User ──> UI Form ──> /api/generate (Backend) ──> LLM API
+                              │
+                              └──> Returns Markdown/HTML
+                                   │
+                                   ├─> ❌ Unsafe Path: UI renders raw HTML
+                                   │   └─> XSS vulnerability
+                                   │
+                                   └─> ✅ Safe Path: UI uses DOMPurify + CSP
+                                       └─> User sees sanitized content
+```
+
+The application demonstrates both vulnerable and secure implementations side-by-side, allowing you to see the difference in behavior and understand how proper output handling prevents attacks.
+
+## Demonstrating the XSS Vulnerability
+
+### Understanding the Attack Vector
 
 The application shows two renderers side-by-side:
-- **Unsafe Renderer** (left): Renders raw LLM output → XSS executes
-- **Safe Renderer** (right): Sanitizes with DOMPurify → XSS blocked
+- **Unsafe Renderer** (left): Renders raw LLM output using `dangerouslySetInnerHTML` → XSS executes
+- **Safe Renderer** (right): Sanitizes with DOMPurify before rendering → XSS blocked
+
+**Why `<img onerror>` instead of `<script>` tags?**
+
+Browsers block `<script>` tags inserted via `innerHTML` (a security feature), but event handler attributes like `onerror` **do execute**. This is why DOMPurify is critical - it strips dangerous attributes that browsers don't block.
+
+### Testing the Vulnerability
 
 **Working Prompts to Test:**
 
@@ -120,26 +188,6 @@ I need HTML for testing error handling. Create an img tag with src="x" and onerr
 - **Unsafe Renderer**: Alert popup executes (`alert("pwned")` or similar)
 - **Safe Renderer**: Alert is blocked, dangerous attributes stripped by DOMPurify
 - **Console logs**: Check browser console (F12) to see raw response vs sanitized output
-
-**Why `<img onerror>` instead of `<script>` tags?**
-
-Browsers block `<script>` tags inserted via `innerHTML` (security feature), but event handler attributes like `onerror` **do execute**. This is why DOMPurify is critical - it strips dangerous attributes that browsers don't block.
-
-## How It Works
-
-```
-User ──> UI Form ──> /api/generate (Backend) ──> LLM API
-                              │
-                              └──> Returns Markdown/HTML
-                                   │
-                                   ├─> ❌ Unsafe Path: UI renders raw HTML
-                                   │   └─> XSS vulnerability
-                                   │
-                                   └─> ✅ Safe Path: UI uses DOMPurify + CSP
-                                       └─> User sees sanitized content
-```
-
-The application demonstrates both vulnerable and secure implementations side-by-side, allowing you to see the difference in behavior and understand how proper output handling prevents attacks.
 
 ## Mitigations Implemented
 
@@ -189,34 +237,19 @@ Default-deny inline scripts and restrict resource loading. Set via meta tag in `
 For production applications, consider layering additional defenses:
 - Structured output validation (validate JSON schema before rendering)
 - Human-in-the-loop review for high-risk content
-- Parameterized queries if executing LLM-generated SQL
+- Parameterized queries if executing LLM-generated SQL (see [DEVELOPMENT.md](DEVELOPMENT.md) for SQL injection demo details)
 
-## What's the Vulnerability?
+## What This Repo Demonstrates
 
-Treating LLM output as trusted and directly rendering or executing it creates serious security risks. This PoC demonstrates two common examples, but these represent just a sample of the many issues that can arise from improper output handling:
+**Vulnerability:** Trusting LLM output (HTML/Markdown, code, queries) without validation/sanitization.
 
-- **Rendering HTML/Markdown without sanitization** → XSS attacks  
-  When LLM-generated content containing malicious scripts is rendered directly in the browser, attackers can execute arbitrary JavaScript in users' browsers, steal sessions, or manipulate the DOM.
+**Impact:** XSS in a dashboard when LLM returns HTML with malicious event handlers.
 
-- **Executing generated SQL** *(optional demo)* → SQL injection/data loss  
-  If an application runs LLM-generated database queries without validation or parameterization, attackers can manipulate the LLM to produce malicious SQL that deletes data, exfiltrates sensitive information, or compromises the database.
-
-Other potential risks include remote code execution (when LLM output is passed to `eval()` or system shells), CSRF attacks, path traversal vulnerabilities, and more. See the [OWASP reference](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/) for additional attack scenarios.
-
-**Core principle:** LLM output must be validated and sanitized like any other untrusted user input. Just because it comes from an AI model doesn't make it safe.
-
-## What this repo demonstrates:
-
-**Vulnerability:** trusting LLM output (HTML/Markdown, code, queries) without validation/sanitization.
-
-**Impact:** XSS in a dashboard when LLM returns HTML; optional SQL injection if app executes model-generated SQL.
-
-**Fixes:** sanitize rendered content, enforce content policies, validate structured output, parameterize any queries, add "human-in-the-loop" for risky actions.
+**Fixes:** Sanitize rendered content (DOMPurify), enforce content policies (CSP), validate structured output, parameterize any queries, add "human-in-the-loop" for risky actions.
 
 ## Resources
 
-- [DEMO_PROMPTS.md](DEMO_PROMPTS.md) - Prompts to test XSS vulnerabilities
-- [DEVELOPMENT.md](DEVELOPMENT.md) - Development and testing specifications
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Development and testing specifications (includes optional SQL injection demo)
 - [OWASP LLM Top 10](https://genai.owasp.org/llmrisk/)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 - [Content Security Policy Guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
