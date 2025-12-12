@@ -43,9 +43,6 @@ cd ..
 
 ```bash
 cp .env.example .env
-# Edit .env and set your API keys:
-# - OPENAI_API_KEY=your-key-here
-# - LANGSMITH_API_KEY=your-key-here (optional, for tracing)
 ```
 
 ### Running the Application
@@ -237,7 +234,7 @@ Default-deny inline scripts and restrict resource loading. Set via meta tag in `
 For production applications, consider layering additional defenses:
 - Structured output validation (validate JSON schema before rendering)
 - Human-in-the-loop review for high-risk content
-- Parameterized queries if executing LLM-generated SQL (see [DEVELOPMENT.md](DEVELOPMENT.md) for SQL injection demo details)
+- Parameterized queries if executing LLM-generated SQL 
 
 ## What This Repo Demonstrates
 
@@ -249,7 +246,6 @@ For production applications, consider layering additional defenses:
 
 ## Resources
 
-- [DEVELOPMENT.md](DEVELOPMENT.md) - Development and testing specifications (includes optional SQL injection demo)
 - [OWASP LLM Top 10](https://genai.owasp.org/llmrisk/)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 - [Content Security Policy Guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)

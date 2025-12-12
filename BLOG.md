@@ -15,52 +15,65 @@ This document contains notes and requirements for writing the blog post based on
 - [ ] Toggle switches showing different security configurations
 - [ ] Direct injection demo (bypasses LLM, proves renderer is the issue)
 - [ ] Network tab showing LLM API request/response
-- [ ] (If implemented) SQL injection demo - vulnerable vs safe query execution
 
 ## Code Excerpts to Include
 
-### 1. SanitizedRenderer Component
+### 1. SafeRenderer Component
 Show the React component using DOMPurify:
 
 ```javascript
-// Example structure (adjust based on actual implementation)
-import DOMPurify from 'dompurify';
+import { useState } from 'react'
+import DOMPurify from 'dompurify'
 
-function SanitizedRenderer({ content }) {
-  const sanitized = DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: ['href', 'title']
-  });
+function SafeRenderer() {
+  const [response, setResponse] = useState('')
   
-  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />;
+  // Sanitize HTML before rendering
+  const sanitized = response ? DOMPurify.sanitize(response, {
+    ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'title']
+  }) : ''
+  
+  return (
+    <div className="response-content safe">
+      <div dangerouslySetInnerHTML={{ __html: sanitized }} />
+    </div>
+  )
 }
 ```
 
-### 2. CSP Header Configuration
-Show backend setting CSP headers:
+### 2. CSP Meta Tag Configuration
+Show CSP set via meta tag in HTML (frontend/index.html):
 
-```python
-# Flask example
-@app.after_request
-def set_csp(response):
-    response.headers['Content-Security-Policy'] = (
-        "default-src 'self'; "
-        "script-src 'self'; "
-        "style-src 'self' 'unsafe-inline';"
-    )
-    return response
+```html
+<!-- Uncomment to enable CSP -->
+<meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; 
+               script-src 'self'; 
+               style-src 'self' 'unsafe-inline'; 
+               img-src 'self' data: https:; 
+               font-src 'self'; 
+               connect-src 'self' http://127.0.0.1:5000;">
 ```
 
-### 3. Unsafe vs Safe Comparison (Optional)
+**Note:** CSP is configured in the frontend HTML file, not backend headers. Uncomment the meta tag to enable CSP protection.
+
+### 3. Unsafe vs Safe Comparison
 Side-by-side code showing the vulnerability:
 
 ```javascript
-// ❌ UNSAFE - Direct rendering
-<div dangerouslySetInnerHTML={{ __html: llmOutput }} />
+// ❌ UNSAFE - Direct rendering (UnsafeRenderer.jsx)
+<div dangerouslySetInnerHTML={{ __html: response }} />
 
-// ✅ SAFE - Sanitized rendering
-<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(llmOutput) }} />
+// ✅ SAFE - Sanitized rendering (SafeRenderer.jsx)
+const sanitized = DOMPurify.sanitize(response, {
+  ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+  ALLOWED_ATTR: ['href', 'title']
+})
+<div dangerouslySetInnerHTML={{ __html: sanitized }} />
 ```
+
+**Key difference:** UnsafeRenderer renders raw LLM output directly, while SafeRenderer sanitizes with DOMPurify before rendering.
 
 ## Key Messaging
 
@@ -114,8 +127,7 @@ Include these references in the blog post:
 - Explanation of defense-in-depth
 
 ### 5. Broader Implications
-- SQL injection variant (if implemented)
-- Other OWASP LLM05 attack vectors (RCE, SSRF, etc.)
+- Other OWASP LLM05 attack vectors (SQL injection, RCE, SSRF, etc.)
 - Why this applies to agents, RAG systems, code generation tools
 
 ### 6. Call to Action
@@ -144,14 +156,4 @@ Include these references in the blog post:
 - [ ] GitHub repo is public and ready to share
 - [ ] .env.example file exists with clear instructions
 - [ ] README.md is polished and complete
-
-## Promotion Ideas
-
-After publishing:
-- [ ] Share on Twitter/X with #LLMSecurity #OWASP hashtags
-- [ ] Post in relevant subreddits (r/netsec, r/appsec, r/MachineLearning)
-- [ ] Submit to Hacker News
-- [ ] Share in security/AI Discord/Slack communities
-- [ ] Tag OWASP AI Exchange on social media
-- [ ] Consider submitting to security newsletters (tl;dr sec, etc.)
 
