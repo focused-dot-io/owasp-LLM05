@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SafeRenderer from './SafeRenderer'
 
-// Mock fetch
 global.fetch = vi.fn()
 
 describe('SafeRenderer Component - User Flow', () => {
@@ -42,7 +41,6 @@ describe('SafeRenderer Component - User Flow', () => {
   it('should show loading state while fetching', async () => {
     const user = userEvent.setup()
     
-    // Delay the fetch response
     fetch.mockImplementationOnce(() => 
       new Promise(resolve => setTimeout(() => resolve({
         ok: true,
@@ -56,7 +54,6 @@ describe('SafeRenderer Component - User Flow', () => {
     await user.type(textarea, 'test')
     await user.click(screen.getByRole('button', { name: /generate/i }))
     
-    // Should show loading state
     await waitFor(() => {
       expect(screen.getByText(/generating/i)).toBeInTheDocument()
     })

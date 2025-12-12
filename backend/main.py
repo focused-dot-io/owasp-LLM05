@@ -4,14 +4,11 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-# Enable CORS for frontend - explicit configuration
 CORS(app)
 
-# Initialize Langchain LLM
 llm = ChatOpenAI(
     model="gpt-4",
     temperature=0.7,
@@ -30,10 +27,8 @@ def generate():
         if not prompt:
             return jsonify({"error": "Prompt is required"}), 400
         
-        # Call LLM via Langchain
         response = llm.invoke(prompt)
         
-        # Extract content from Langchain response
         content = response.content if hasattr(response, "content") else str(response)
         
         return jsonify({

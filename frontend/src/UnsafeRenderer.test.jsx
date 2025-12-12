@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import UnsafeRenderer from './UnsafeRenderer'
 
-// Mock fetch
 global.fetch = vi.fn()
 
 describe('UnsafeRenderer Component - User Flow', () => {
