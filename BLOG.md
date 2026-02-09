@@ -34,8 +34,7 @@ Let's take a look at how this vulnerability can occur and how to resolve it:
 [Video goes here]
 
 # Try it out yourself!
-TODO: LINK TO REPO
-Explore our repo to run the attack locally. All you need is an OpenAI API key to experiment.
+[Explore our repo](https://github.com/focused-dot-io/owasp-LLM05) to run the attack locally. All you need is an OpenAI API key to experiment.
 
 # Takeaways
 
